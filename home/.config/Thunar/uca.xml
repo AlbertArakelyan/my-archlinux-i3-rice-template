@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actions>
+<action>
+	<icon>utilities-terminal</icon>
+	<name>Open Alacritty Here</name>
+	<submenu></submenu>
+	<unique-id>1730000000000001-1</unique-id>
+	<command>alacritty --working-directory %f</command>
+	<description>Open a terminal in this folder</description>
+	<range></range>
+	<patterns>*</patterns>
+	<startup-notify/>
+	<directories/>
+</action>
+<action>
+	<icon>document-properties</icon>
+	<name>Edit as Root</name>
+	<submenu></submenu>
+	<unique-id>1730000000000002-1</unique-id>
+	<command>alacritty -e sudoedit %f</command>
+	<description>Edit this file with root privileges</description>
+	<range></range>
+	<patterns>*</patterns>
+	<text-files/>
+	<other-files/>
+</action>
+<action>
+	<icon>edit-copy</icon>
+	<name>Copy Path</name>
+	<submenu></submenu>
+	<unique-id>1730000000000003-1</unique-id>
+	<command>sh -c 'echo -n "$1" | xclip -selection clipboard' _ %f</command>
+	<description>Copy the full path to the clipboard</description>
+	<range></range>
+	<patterns>*</patterns>
+	<startup-notify/>
+	<directories/>
+	<audio-files/>
+	<image-files/>
+	<other-files/>
+	<text-files/>
+	<video-files/>
+</action>
+</actions>

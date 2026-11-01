@@ -1,0 +1,157 @@
+You are in a folder that contains a complete Catppuccin Mocha rice for Arch Linux + i3 (X11).
+Your job is to apply it to THIS machine. Read REQUIREMENTS.md first, then explore the `home/` folder
+(it mirrors $HOME exactly — every file there must end up at the same path under ~).
+
+HARD RULES
+- Arch Linux official repositories only. NEVER use the AUR or any AUR helper (yay, paru, etc.).
+- Do NOT install or configure zsh. The shell is bash; Oh My Posh is initialized from ~/.bashrc.
+- Theme: Catppuccin Mocha (mauve accent). Font everywhere: JetBrainsMono Nerd Font.
+- No advanced animations, blur, shadows, fading, rounded corners or transparency. picom stays on the
+  xrender backend with vsync only, exactly as in home/.config/picom/picom.conf.
+- Never run sudo commands yourself. I will run every sudo/install command myself.
+
+================================================================
+PHASE 1 — BEFORE CHANGING ANYTHING: give me all install commands
+================================================================
+1. Detect the environment and report it to me:
+   - `systemd-detect-virt` (is this VirtualBox / "oracle"?)
+   - which display manager is active (sddm, lightdm, gdm, ly, or startx)
+   - is NetworkManager active, is PipeWire or PulseAudio in use
+   - wired vs wireless network interface name(s) (`ip -br link`), and whether a battery exists
+     (`ls /sys/class/power_supply`)
+   - which of the packages below are already installed (`pacman -Q`)
+
+2. Print BOTH package sets below (always show both, and tell me which one matches this machine):
+
+   --- SET A: VirtualBox guest ---
+   sudo pacman -S --needed \
+     i3-wm alacritty xss-lock libpulse \
+     ttf-jetbrains-mono-nerd noto-fonts noto-fonts-emoji \
+     polybar rofi dunst libnotify feh i3lock picom \
+     papirus-icon-theme lxappearance kvantum qt5ct \
+     maim xclip xdotool playerctl pavucontrol network-manager-applet \
+     btop fastfetch git curl unzip \
+     thunar gvfs thunar-archive-plugin thunar-volman tumbler ffmpegthumbnailer xarchiver xdg-user-dirs \
+     firefox \
+     virtualbox-guest-utils
+   sudo systemctl enable --now vboxservice
+
+   --- SET B: real hardware / not VirtualBox ---
+   sudo pacman -S --needed \
+     i3-wm alacritty xss-lock libpulse \
+     ttf-jetbrains-mono-nerd noto-fonts noto-fonts-emoji \
+     polybar rofi dunst libnotify feh i3lock picom \
+     papirus-icon-theme lxappearance kvantum qt5ct \
+     maim xclip xdotool playerctl pavucontrol network-manager-applet \
+     btop fastfetch git curl unzip \
+     thunar gvfs thunar-archive-plugin thunar-volman tumbler ffmpegthumbnailer xarchiver xdg-user-dirs \
+     firefox
+
+   (If NetworkManager is NOT used on this machine, point out that network-manager-applet can be
+   dropped. Verify every package name with `pacman -Si` before printing; if one does not exist in
+   the official repos, say so and propose an official-repo alternative — never an AUR one.)
+
+3. Print the non-pacman install commands:
+
+   # Oh My Posh — official installer, user-local, no root (not in official repos)
+   curl -s https://ohmyposh.dev/install.sh | bash -s -- -d ~/.local/bin
+
+   (The Catppuccin GTK and Kvantum themes are already vendored in home/, so no download is needed.
+   Only if those folders are missing, use the download commands from REQUIREMENTS.md section 3.)
+
+4. STOP. Wait until I confirm that I ran the commands. Do not touch any file before that.
+
+================================================================
+PHASE 2 — after I confirm: apply the rice
+================================================================
+5. Verify the installs: `pacman -Q` for the chosen set, `command -v oh-my-posh` (or ~/.local/bin/oh-my-posh),
+   and `fc-list | grep -i "JetBrainsMono Nerd"`. Report anything missing and stop if it matters.
+
+6. Back up every file that will be overwritten into ~/.rice-backup-<YYYYmmdd-HHMMSS>/ (keep the same
+   relative paths). Tell me the backup path.
+
+7. Copy everything from home/ into ~ :
+     cp -r home/. ~/
+     chmod +x ~/.config/polybar/launch.sh ~/.config/rofi/powermenu.sh
+     mkdir -p ~/Pictures/screenshots
+
+8. Recreate the GTK4 symlinks:
+     T=~/.themes/catppuccin-mocha-mauve-standard+default
+     mkdir -p ~/.config/gtk-4.0
+     ln -sfn $T/gtk-4.0/assets       ~/.config/gtk-4.0/assets
+     ln -sf  $T/gtk-4.0/gtk.css      ~/.config/gtk-4.0/gtk.css
+     ln -sf  $T/gtk-4.0/gtk-dark.css ~/.config/gtk-4.0/gtk-dark.css
+
+9. Apply gsettings and font cache:
+     gsettings set org.gnome.desktop.interface gtk-theme 'catppuccin-mocha-mauve-standard+default'
+     gsettings set org.gnome.desktop.interface icon-theme 'Papirus-Dark'
+     gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
+     gsettings set org.gnome.desktop.interface font-name 'JetBrainsMono Nerd Font 10'
+     gsettings set org.gnome.desktop.interface monospace-font-name 'JetBrainsMono Nerd Font 10'
+     fc-cache -f
+   Then confirm `fc-match monospace`, `fc-match sans-serif` and `fc-match serif` all return JetBrainsMono Nerd Font.
+
+9b. Set up Thunar (file manager, Super+Shift+F). Its config is already copied from home/
+    (~/.config/xfce4/xfconf/xfce-perchannel-xml/thunar.xml, ~/.config/xfce4/helpers.rc, ~/.config/Thunar/uca.xml).
+    If xfconfd is running, kill it first (`pkill xfconfd`) so it re-reads thunar.xml. Then:
+     xdg-user-dirs-update
+     xdg-mime default thunar.desktop inode/directory
+     mkdir -p ~/Projects
+     cat > ~/.config/gtk-3.0/bookmarks <<EOF
+     file://$HOME/Documents Documents
+     file://$HOME/Downloads Downloads
+     file://$HOME/Pictures Pictures
+     file://$HOME/Pictures/screenshots Screenshots
+     file://$HOME/Projects Projects
+     EOF
+    Verify with `xdg-mime query default inode/directory` (must print thunar.desktop).
+
+9c. Firefox. There is NO Firefox config in home/ — Firefox gets its look from the system:
+    - Font: its default fonts are the generic sans-serif / serif / monospace families, which
+      ~/.config/fontconfig/fonts.conf maps to JetBrainsMono Nerd Font (sites with their own web fonts keep those).
+    - Catppuccin UI: Firefox's built-in "System theme — auto" (extensions.activeThemeID = default-theme@mozilla.org,
+      the default) draws the toolbar, tabs and menus with the GTK theme, i.e. Catppuccin Mocha Mauve.
+      color-scheme 'prefer-dark' (step 9) makes sites with a dark mode use it.
+    - The Firefox profile lives in ~/.config/mozilla/firefox/ on current Firefox, or ~/.mozilla/firefox/ on older ones.
+    Do not create or edit any Firefox profile files. Only check that an existing profile does not override
+    this: `grep -h 'font.name\|browser.display.use_document_fonts\|ui.systemUsesDarkTheme\|layout.css.prefers-color-scheme\|extensions.activeThemeID' ~/.config/mozilla/firefox/*/prefs.js ~/.mozilla/firefox/*/prefs.js 2>/dev/null`
+    — if a font override shows up, or activeThemeID is anything other than default-theme@mozilla.org
+    (another theme is active, so the GTK/Catppuccin look won't apply), tell me and ask before changing it.
+    If Firefox has never been started there is no profile yet; that is fine, the defaults already match. If Firefox is running, tell me to restart it.
+    Then tell me (do not do it yourself) that I can optionally install the official Catppuccin Mocha (Mauve)
+    Firefox add-on theme instead (links at https://github.com/catppuccin/firefox). It is not needed: the
+    reference machine uses the built-in System theme with the Catppuccin GTK theme.
+
+10. Adapt machine-specific bits (keep everything else identical to the repo):
+    - NOT VirtualBox: remove the `exec --no-startup-id VBoxClient-all` line from ~/.config/i3/config.
+    - Wireless machine: in ~/.config/polybar/config.ini set the network module to `interface-type = wireless`
+      and use `%essid%` in label-connected (or add a second wireless module next to the wired one).
+    - Laptop with a battery: add an `internal/battery` polybar module (Mocha colors, Nerd Font icons) to modules-right.
+    - No NetworkManager: remove the `exec --no-startup-id nm-applet` line from the i3 config.
+    - Display manager is not SDDM/LightDM/GDM (e.g. startx): make sure the env vars from ~/.xprofile are loaded
+      (source ~/.xprofile from ~/.xinitrc before `exec i3`).
+    - If the existing ~/.config/i3/config had custom keyboard layout or monitor settings, tell me and offer to keep them.
+    - Keep $mod = Super, Super+Enter = alacritty.
+
+11. Validate before reloading:
+     i3 -C -c ~/.config/i3/config
+     oh-my-posh print primary --config ~/.config/ohmyposh/catppuccin-mocha.omp.json --shell bash
+   Fix any errors.
+
+12. If an X session is running (DISPLAY is set), apply live:
+     - kill i3bar / i3status if running, then `i3-msg restart`
+     - start picom (`picom --config ~/.config/picom/picom.conf`), dunst, and on VirtualBox `VBoxClient-all`,
+       if they are not already running (i3 restart does not re-run plain `exec` lines)
+     - check /tmp/polybar.log for "Dropping unmatched character" warnings; if a glyph is missing from the
+       font, replace it with an equivalent Nerd Font glyph that exists (e.g. nf-md-* codepoints)
+     - take a screenshot with maim into the current folder and look at it to confirm the bar, borders, gaps,
+       wallpaper and terminal colors look correct
+     - open Thunar (`thunar &`), screenshot it, confirm it uses the Catppuccin GTK theme + Papirus-Dark
+       icons and the JetBrainsMono font, then close it
+     - if Firefox is installed, open it (`firefox about:blank &` is fine), screenshot it, confirm the Catppuccin
+       (GTK) colors and JetBrainsMono font in its toolbar, tabs and menus, then close it
+     - send a test notification: notify-send "Catppuccin Mocha" "Rice applied"
+
+13. Finish with a short summary: what was applied, what was adapted for this machine, the backup path,
+    the main keybindings (from the i3 config), and remind me to log out and back in once so the display
+    manager loads ~/.xprofile (Qt/GTK theme env vars).
