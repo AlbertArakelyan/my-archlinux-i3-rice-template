@@ -1,5 +1,7 @@
 # Catppuccin Mocha i3 Rice
 
+![Screenshot](./screenshot.png)
+
 A clean, functional **Arch Linux + i3** rice in the **Catppuccin Mocha** palette (mauve accent),
 built to run smoothly inside **VirtualBox**: no blur, shadows, transparency or animations.
 Everything comes from the official Arch repos. **No AUR.**
